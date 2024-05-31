@@ -53,8 +53,8 @@ local function tweenToPlayer(player)
                 (targetPosition - startPosition).Magnitude / 100, -- Duration based on distance
                 Enum.EasingStyle.Linear,
                 Enum.EasingDirection.Out,
-                -1, -- Infinite loops
-                true -- Auto-reverse
+                0, -- No repeat
+                false -- Do not reverse
             )
             
             local tween = TweenService:Create(localPlayer.Character.HumanoidRootPart, tweenInfo, {CFrame = CFrame.new(targetPosition)})
