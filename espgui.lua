@@ -1,49 +1,110 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local localPlayer = Players.LocalPlayer
 local maxDistance = 100 -- Default max distance for ESP
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("ESP GUI", "DarkTheme")
-local Tab = Window:NewTab("Main")
-local Section = Tab:NewSection("ESP Settings")
+local EspTab = Window:NewTab("ESP")
+local TeleportTab = Window:NewTab("Teleport")
 
+-- ESP Settings
+local EspSection = EspTab:NewSection("ESP Settings")
 local showName = false
 local showDistance = false
 local showTracers = false
 
-Section:NewToggle("Show Name", "Toggle showing player names", function(state)
+EspSection:NewToggle("Show Name", "Toggle showing player names", function(state)
     showName = state
     updateAllESP()
 end)
 
-Section:NewToggle("Show Distance", "Toggle showing player distance", function(state)
+EspSection:NewToggle("Show Distance", "Toggle showing player distance", function(state)
     showDistance = state
     updateAllESP()
 end)
 
-Section:NewToggle("Show Tracers", "Toggle showing tracers", function(state)
+EspSection:NewToggle("Show Tracers", "Toggle showing tracers", function(state)
     showTracers = state
     updateAllESP()
 end)
 
-Section:NewSlider("Max Distance", "Set maximum distance for ESP", 500, 0, function(value)
+EspSection:NewSlider("Max Distance", "Set maximum distance for ESP", 500, 0, function(value)
     maxDistance = value
     updateAllESP()
 end)
 
--- Toggle GUI visibility with a key press
-Section:NewKeybind("Toggle GUI", "Toggle the ESP GUI visibility", Enum.KeyCode.G, function()
-    Library:ToggleUI()
-end)
+-- Teleport Settings
+local TeleportSection = TeleportTab:NewSection("Teleport")
+local playerList = {}
 
--- Close GUI with 'X' button
-local closeButton = Window.Topbar:WaitForChild("Close")
-closeButton.MouseButton1Click:Connect(function()
-    Library:ToggleUI()
-end)
+local function createPlayerButton(player)
+    local button = TeleportSection:NewButton(player.Name, "Teleport to " .. player.Name, function()
+        tweenToPlayer(player)
+    end)
+    playerList[player.Name] = button
+end
+
+local function tweenToPlayer(player)
+    local character = player.Character
+    if character then
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            local targetPosition = humanoidRootPart.Position
+            local startPosition = localPlayer.Character.HumanoidRootPart.Position
+            
+            local tweenInfo = TweenInfo.new(
+                (targetPosition - startPosition).Magnitude / 100, -- Duration based on distance
+                Enum.EasingStyle.Linear,
+                Enum.EasingDirection.Out,
+                -1, -- Infinite loops
+                true -- Auto-reverse
+            )
+            
+            local tween = TweenService:Create(localPlayer.Character.HumanoidRootPart, tweenInfo, {CFrame = CFrame.new(targetPosition)})
+            tween:Play()
+        end
+    end
+end
+
+local function updatePlayerList()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            if not playerList[player.Name] then
+                createPlayerButton(player)
+            end
+        end
+    end
+end
+
+local function removePlayerButton(player)
+    if playerList[player.Name] then
+        playerList[player.Name]:Destroy()
+        playerList[player.Name] = nil
+    end
+end
+
+local function onPlayerAdded(player)
+    createPlayerButton(player)
+end
+
+local function onPlayerRemoving(player)
+    removePlayerButton(player)
+end
+
+local function initPlayerList()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            createPlayerButton(player)
+        end
+    end
+
+    Players.PlayerAdded:Connect(onPlayerAdded)
+    Players.PlayerRemoving:Connect(onPlayerRemoving)
+end
 
 local function createESP(player)
     local character = player.Character
@@ -168,6 +229,7 @@ end
 
 RunService.Heartbeat:Connect(updateAllESP)
 initESP()
+initPlayerList()
 
 -- Toggle GUI visibility with a key press
 local guiVisible = true
