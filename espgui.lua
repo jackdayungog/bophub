@@ -56,12 +56,17 @@ local function lerpToPlayer(player)
                 local t = (tick() - startTime) / duration
                 local newPosition = startPosition:Lerp(targetPosition, t)
                 local newPositionCFrame = CFrame.new(newPosition)
-                local camera = game.Workspace.CurrentCamera
-                camera.CFrame = CFrame.new(newPosition + Vector3.new(0, 5, -10), targetPosition)
+                
+                -- Update local player's position
                 local humanoidRootPart = localPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if humanoidRootPart then
                     humanoidRootPart.CFrame = newPositionCFrame
                 end
+                
+                -- Update camera's position to follow the local player
+                local camera = game.Workspace.CurrentCamera
+                camera.CFrame = CFrame.new(newPosition + Vector3.new(0, 5, -10), newPosition)
+                
                 RunService.RenderStepped:Wait()
             end
         end
