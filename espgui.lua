@@ -43,7 +43,7 @@ local function createESP(player)
         local billboard = Instance.new("BillboardGui")
         billboard.Name = "ESPBillboard"
         billboard.Adornee = character:WaitForChild("HumanoidRootPart")
-        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.Size = UDim2.new(0, 100, 0, 25)
         billboard.StudsOffset = Vector3.new(0, 3, 0)
         billboard.AlwaysOnTop = true
 
@@ -53,6 +53,8 @@ local function createESP(player)
         textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         textLabel.BackgroundTransparency = 1
         textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.SourceSans
+        textLabel.TextSize = 14
         textLabel.Parent = billboard
         billboard.Parent = character
     end
@@ -62,7 +64,7 @@ local function createESP(player)
         local distanceBillboard = Instance.new("BillboardGui")
         distanceBillboard.Name = "ESPDistanceBillboard"
         distanceBillboard.Adornee = character:WaitForChild("HumanoidRootPart")
-        distanceBillboard.Size = UDim2.new(0, 200, 0, 50)
+        distanceBillboard.Size = UDim2.new(0, 100, 0, 25)
         distanceBillboard.StudsOffset = Vector3.new(0, -3, 0)
         distanceBillboard.AlwaysOnTop = true
 
@@ -72,6 +74,8 @@ local function createESP(player)
         distanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         distanceLabel.BackgroundTransparency = 1
         distanceLabel.TextScaled = true
+        distanceLabel.Font = Enum.Font.SourceSans
+        distanceLabel.TextSize = 14
         distanceLabel.Parent = distanceBillboard
         distanceBillboard.Parent = character
     end
