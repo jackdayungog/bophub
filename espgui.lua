@@ -170,9 +170,9 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if input.KeyCode == Enum.KeyCode.G then -- Change this to the key you want to use for toggling
         guiVisible = not guiVisible
         if guiVisible then
-            Library:Open() -- Ensure this calls the correct method to open the GUI
+            Library:ToggleUI() -- Ensure this calls the correct method to open the GUI
         else
-            Library:Close() -- Ensure this calls the correct method to close the GUI
+            Library:ToggleUI() -- Ensure this calls the correct method to close the GUI
         end
     end
 end)
