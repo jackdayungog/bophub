@@ -54,7 +54,7 @@ local function lerpToPlayer(player)
             local targetPosition = humanoidRootPart.Position
             
             local startPosition = localPlayer.Character.HumanoidRootPart.Position
-            local duration = (targetPosition - startPosition).Magnitude / (lerpSpeed * 100) -- Duration based on distance and lerp speed
+            local duration = (targetPosition - startPosition).Magnitude / 100 -- Duration based on distance
             
             local startTime = tick()
             while tick() - startTime < duration do
