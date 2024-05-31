@@ -41,34 +41,36 @@ end)
 local TeleportSection = TeleportTab:NewSection("Teleport")
 local playerList = {}
 
-local function tweenToPlayer(player)
+local function lerpToPlayer(player)
     local character = player.Character
     if character then
         local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
         if humanoidRootPart then
             local targetPosition = humanoidRootPart.Position
             
-            local tweenInfo = TweenInfo.new(
-                (targetPosition - localPlayer.Character.HumanoidRootPart.Position).Magnitude / 100, -- Duration based on distance
-                Enum.EasingStyle.Linear,
-                Enum.EasingDirection.Out,
-                0, -- No repeat
-                false -- Do not reverse
-            )
+            local startPosition = localPlayer.Character.HumanoidRootPart.Position
+            local duration = (targetPosition - startPosition).Magnitude / 100 -- Duration based on distance
             
-            local tween = TweenService:Create(localPlayer.Character.HumanoidRootPart, tweenInfo, {Position = targetPosition})
-            tween:Play()
-            
-            -- Adjust camera position to focus on the target position
-            local camera = game.Workspace.CurrentCamera
-            camera.CFrame = CFrame.new(targetPosition + Vector3.new(0, 5, -10), targetPosition)
+            local startTime = tick()
+            while tick() - startTime < duration do
+                local t = (tick() - startTime) / duration
+                local newPosition = startPosition:Lerp(targetPosition, t)
+                local newPositionCFrame = CFrame.new(newPosition)
+                local camera = game.Workspace.CurrentCamera
+                camera.CFrame = CFrame.new(newPosition + Vector3.new(0, 5, -10), targetPosition)
+                local humanoidRootPart = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    humanoidRootPart.CFrame = newPositionCFrame
+                end
+                RunService.RenderStepped:Wait()
+            end
         end
     end
 end
 
 local function createPlayerButton(player)
     local button = TeleportSection:NewButton(player.Name, "Teleport to " .. player.Name, function()
-        tweenToPlayer(player)
+        lerpToPlayer(player)
     end)
     playerList[player.Name] = button
 end
