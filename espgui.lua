@@ -6,8 +6,6 @@ local TweenService = game:GetService("TweenService")
 local localPlayer = Players.LocalPlayer
 local maxDistance = 100 -- Default max distance for ESP
 local lerpSpeed = 1 -- Default lerp speed
-local walkSpeed = 16 -- Default walk speed
-local jumpPower = 50 -- Default jump power
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("ESP GUI", "DarkTheme")
