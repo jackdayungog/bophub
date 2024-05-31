@@ -14,17 +14,6 @@ local Window = Library.CreateLib("ESP GUI", "DarkTheme")
 local EspTab = Window:NewTab("ESP")
 local TeleportTab = Window:NewTab("Teleport")
 
--- Local Settings
-LocalSection:NewSlider("Walk Speed", "Adjust walk speed", 100, 16, function(value)
-    walkSpeed = value
-    localPlayer.Character.Humanoid.WalkSpeed = walkSpeed
-end)
-
-LocalSection:NewSlider("Jump Power", "Adjust jump power", 250, 50, function(value)
-    jumpPower = value
-    localPlayer.Character.Humanoid.JumpPower = jumpPower
-end)
-
 -- ESP Settings
 local EspSection = EspTab:NewSection("ESP Settings")
 local showName = false
