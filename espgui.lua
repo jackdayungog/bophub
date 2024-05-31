@@ -58,6 +58,10 @@ local function tweenToPlayer(player)
             
             local tween = TweenService:Create(localPlayer.Character.HumanoidRootPart, tweenInfo, {Position = targetPosition})
             tween:Play()
+            
+            -- Adjust camera position to focus on the target position
+            local camera = game.Workspace.CurrentCamera
+            camera.CFrame = CFrame.new(targetPosition + Vector3.new(0, 5, -10), targetPosition)
         end
     end
 end
