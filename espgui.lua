@@ -11,7 +11,6 @@ local jumpPower = 50 -- Default jump power
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("ESP GUI", "DarkTheme")
-local LocalSection = Window:NewTab("Local")
 local EspTab = Window:NewTab("ESP")
 local TeleportTab = Window:NewTab("Teleport")
 
