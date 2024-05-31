@@ -5,7 +5,7 @@ local TweenService = game:GetService("TweenService")
 
 local localPlayer = Players.LocalPlayer
 local maxDistance = 100 -- Default max distance for ESP
-local lerpSpeed = 0.5 -- Default lerp speed
+local lerpSpeed = 1 -- Default lerp speed
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("ESP GUI", "DarkTheme")
@@ -42,7 +42,7 @@ end)
 local TeleportSection = TeleportTab:NewSection("Teleport")
 local playerList = {}
 
-local lerpSpeedSlider = TeleportSection:NewSlider("Lerp Speed", "Set lerp speed", 5, 0.1, function(value)
+local lerpSpeedSlider = TeleportSection:NewSlider("Lerp Speed", "Set lerp speed", 5, 1, function(value)
     lerpSpeed = value
 end)
 
