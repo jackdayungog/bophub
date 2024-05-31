@@ -42,7 +42,7 @@ end)
 local TeleportSection = TeleportTab:NewSection("Teleport")
 local playerList = {}
 
-TeleportSection:NewSlider("Lerp Speed", "Set lerp speed", 1, 0.1, function(value)
+local lerpSpeedSlider = TeleportSection:NewSlider("Lerp Speed", "Set lerp speed", 5, 0.1, function(value)
     lerpSpeed = value
 end)
 
