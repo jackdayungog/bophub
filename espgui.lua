@@ -47,17 +47,16 @@ local function tweenToPlayer(player)
         local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
         if humanoidRootPart then
             local targetPosition = humanoidRootPart.Position
-            local startPosition = localPlayer.Character.HumanoidRootPart.Position
             
             local tweenInfo = TweenInfo.new(
-                (targetPosition - startPosition).Magnitude / 100, -- Duration based on distance
+                (targetPosition - localPlayer.Character.HumanoidRootPart.Position).Magnitude / 100, -- Duration based on distance
                 Enum.EasingStyle.Linear,
                 Enum.EasingDirection.Out,
                 0, -- No repeat
                 false -- Do not reverse
             )
             
-            local tween = TweenService:Create(localPlayer.Character.HumanoidRootPart, tweenInfo, {CFrame = CFrame.new(targetPosition)})
+            local tween = TweenService:Create(localPlayer.Character.HumanoidRootPart, tweenInfo, {Position = targetPosition})
             tween:Play()
         end
     end
