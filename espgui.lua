@@ -41,13 +41,6 @@ end)
 local TeleportSection = TeleportTab:NewSection("Teleport")
 local playerList = {}
 
-local function createPlayerButton(player)
-    local button = TeleportSection:NewButton(player.Name, "Teleport to " .. player.Name, function()
-        tweenToPlayer(player)
-    end)
-    playerList[player.Name] = button
-end
-
 local function tweenToPlayer(player)
     local character = player.Character
     if character then
@@ -68,6 +61,13 @@ local function tweenToPlayer(player)
             tween:Play()
         end
     end
+end
+
+local function createPlayerButton(player)
+    local button = TeleportSection:NewButton(player.Name, "Teleport to " .. player.Name, function()
+        tweenToPlayer(player)
+    end)
+    playerList[player.Name] = button
 end
 
 local function updatePlayerList()
