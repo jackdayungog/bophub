@@ -5,6 +5,7 @@ local TweenService = game:GetService("TweenService")
 
 local localPlayer = Players.LocalPlayer
 local maxDistance = 100 -- Default max distance for ESP
+local lerpSpeed = 0.5 -- Default lerp speed
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("ESP GUI", "DarkTheme")
@@ -41,6 +42,10 @@ end)
 local TeleportSection = TeleportTab:NewSection("Teleport")
 local playerList = {}
 
+TeleportSection:NewSlider("Lerp Speed", "Set lerp speed", 1, 0.1, function(value)
+    lerpSpeed = value
+end)
+
 local function lerpToPlayer(player)
     local character = player.Character
     if character then
@@ -49,7 +54,7 @@ local function lerpToPlayer(player)
             local targetPosition = humanoidRootPart.Position
             
             local startPosition = localPlayer.Character.HumanoidRootPart.Position
-            local duration = (targetPosition - startPosition).Magnitude / 100 -- Duration based on distance
+            local duration = (targetPosition - startPosition).Magnitude / (lerpSpeed * 100) -- Duration based on distance and lerp speed
             
             local startTime = tick()
             while tick() - startTime < duration do
