@@ -34,6 +34,10 @@ Section:NewSlider("Max Distance", "Set maximum distance for ESP", 500, 0, functi
     updateAllESP()
 end)
 
+Section:NewKeybind("Toggle GUI", "Toggle the ESP GUI visibility", Enum.KeyCode.G, function()
+    Library:ToggleUI()
+end)
+
 local function createESP(player)
     local character = player.Character
     if not character then return end
@@ -166,9 +170,9 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if input.KeyCode == Enum.KeyCode.G then -- Change this to the key you want to use for toggling
         guiVisible = not guiVisible
         if guiVisible then
-            Window:Show()
+            Library:Open() -- Ensure this calls the correct method to open the GUI
         else
-            Window:Hide()
+            Library:Close() -- Ensure this calls the correct method to close the GUI
         end
     end
 end)
