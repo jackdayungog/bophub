@@ -34,7 +34,14 @@ Section:NewSlider("Max Distance", "Set maximum distance for ESP", 500, 0, functi
     updateAllESP()
 end)
 
+-- Toggle GUI visibility with a key press
 Section:NewKeybind("Toggle GUI", "Toggle the ESP GUI visibility", Enum.KeyCode.G, function()
+    Library:ToggleUI()
+end)
+
+-- Close GUI with 'X' button
+local closeButton = Window.Topbar:WaitForChild("Close")
+closeButton.MouseButton1Click:Connect(function()
     Library:ToggleUI()
 end)
 
