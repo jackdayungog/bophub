@@ -80,16 +80,16 @@ local function lerpToPlayer(player)
 end
 
 local function createPlayerButton(player)
-    local button = TeleportSection:NewButton(player.Name, "Teleport to " .. player.Name, function()
+    local button = TeleportSection:NewButton(player, "Teleport to " .. player, function()
         lerpToPlayer(player)
     end)
-    playerList[player.Name] = button
+    playerList[player] = button
 end
 
 local function updatePlayerList()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= localPlayerCharacter then
-            if not playerList[player.Name] then
+            if not playerList[player] then
                 createPlayerButton(player)
             end
         end
@@ -97,9 +97,9 @@ local function updatePlayerList()
 end
 
 local function removePlayerButton(player)
-    if playerList[player.Name] then
-        playerList[player.Name]:Destroy()
-        playerList[player.Name] = nil
+    if playerList[player] then
+        playerList[player]:Destroy()
+        playerList[player] = nil
     end
 end
 
@@ -136,7 +136,7 @@ local function createESP(player)
         billboard.AlwaysOnTop = true
 
         local textLabel = Instance.new("TextLabel")
-        textLabel.Text = player.Name
+        textLabel.Text = player
         textLabel.Size = UDim2.new(1, 0, 1, 0)
         textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         textLabel.BackgroundTransparency = 1
