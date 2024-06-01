@@ -57,13 +57,15 @@ local radarXSlider
 local radarYSlider
 
 local function createRadar()
-    radarFrame = Instance.new("Frame")
-    radarFrame.Size = UDim2.new(0, 200, 0, 200)
-    radarFrame.Position = UDim2.new(1, -220, 0, 20)
-    radarFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    radarFrame.BackgroundTransparency = 0.5
-    radarFrame.BorderSizePixel = 0
-    radarFrame.Parent = game.CoreGui
+    if not radarFrame then
+        radarFrame = Instance.new("Frame")
+        radarFrame.Size = UDim2.new(0, 200, 0, 200)
+        radarFrame.Position = UDim2.new(1, -220, 0, 20)
+        radarFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        radarFrame.BackgroundTransparency = 0.5
+        radarFrame.BorderSizePixel = 0
+        radarFrame.Parent = game.CoreGui
+    end
 end
 
 local function updateRadarBlips()
@@ -99,6 +101,7 @@ local function updateRadar()
             createRadar()
         end
         updateRadarBlips()
+        RunService.RenderStepped:Connect(updateRadarBlips) -- Ensure radar updates continuously
     else
         if radarFrame then
             radarFrame:Destroy()
