@@ -11,6 +11,7 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHept
 local Window = Library.CreateLib("ESP GUI", "DarkTheme")
 local EspTab = Window:NewTab("ESP")
 local TeleportTab = Window:NewTab("Teleport")
+local LocalTab = Window:NewTab("Local") -- Add a new tab for local player settings
 
 -- ESP Settings
 local EspSection = EspTab:NewSection("ESP Settings")
@@ -259,4 +260,15 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             Library:ToggleUI() -- Ensure this calls the correct method to close the GUI
         end
     end
+end)
+
+-- Local Player Settings
+local LocalSection = LocalTab:NewSection("Local Player Settings")
+
+LocalSection:NewSlider("Walk Speed", "Set your walk speed", 100, 16, function(value)
+    localPlayer.Character.Humanoid.WalkSpeed = value
+end)
+
+LocalSection:NewSlider("Jump Power", "Set your jump power", 100, 50, function(value)
+    localPlayer.Character.Humanoid.JumpPower = value
 end)
