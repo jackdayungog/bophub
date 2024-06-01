@@ -3,23 +3,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
-local LocalPlayer = game.Workspace:WaitForChild(localPlayer.Name)
-
--- If the character is found, you can access its properties
-if LocalPlayer then
-    print("Local player's character found in Workspace")
-    -- Access local player's character properties
-    local humanoid = LocalPlayer:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        -- Access the humanoid properties
-        print("Local player's humanoid found with WalkSpeed:", humanoid.WalkSpeed)
-    else
-        print("Local player's humanoid not found")
-    end
-else
-    print("Local player's character not found in Workspace")
-end
-
+local localPlayer = Players.LocalPlayer
 local maxDistance = 100 -- Default max distance for ESP
 local lerpSpeed = 1 -- Default lerp speed
 
@@ -93,7 +77,7 @@ local function updateRadarBlips()
     radarBlips = {}
 
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local blip = Instance.new("Frame")
             blip.Size = UDim2.new(0, 5, 0, 5)
             blip.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
@@ -205,7 +189,7 @@ end
 
 local function updatePlayerList()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
+        if player ~= localPlayer then
             if not playerList[player.Name] then
                 createPlayerButton(player)
             end
@@ -274,7 +258,7 @@ local function createESP(player)
         distanceBillboard.AlwaysOnTop = true
 
         local distanceLabel = Instance.new("TextLabel")
-        distanceLabel.Text = math.floor((character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude) .. "m"
+        distanceLabel.Text = math.floor((character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude) .. "m"
         distanceLabel.Size = UDim2.new(1, 0, 1, 0)
         distanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         distanceLabel.BackgroundTransparency = 1
@@ -328,7 +312,7 @@ local function updateESP(player)
     local character = player.Character
     if not character then return end
     removeESP(player)
-    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+    local distance = (localPlayer.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
     if distance <= maxDistance then
         createESP(player)
     end
@@ -336,7 +320,7 @@ end
 
 local function updateAllESP()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             updateESP(player)
         end
     end
@@ -351,7 +335,7 @@ end
 
 local function initESP()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
+        if player ~= localPlayer then
             updateESP(player)
         end
     end
@@ -383,9 +367,9 @@ end)
 local LocalSection = LocalTab:NewSection("Local Player Settings")
 
 LocalSection:NewSlider("Walk Speed", "Set your walk speed", 100, 16, function(value)
-    LocalPlayer.Character.Humanoid.WalkSpeed = value
+    localPlayer.Character.Humanoid.WalkSpeed = value
 end)
 
 LocalSection:NewSlider("Jump Power", "Set your jump power", 100, 50, function(value)
-    LocalPlayer.Character.Humanoid.JumpPower = value
+    localPlayer.Character.Humanoid.JumpPower = value
 end)
