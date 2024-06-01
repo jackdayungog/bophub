@@ -18,7 +18,6 @@ local EspSection = EspTab:NewSection("ESP Settings")
 local showName = false
 local showDistance = false
 local showTracers = false
-local showRadar = false
 
 EspSection:NewToggle("Show Name", "Toggle showing player names", function(state)
     showName = state
@@ -35,105 +34,10 @@ EspSection:NewToggle("Show Tracers", "Toggle showing tracers", function(state)
     updateAllESP()
 end)
 
-EspSection:NewToggle("Show Radar", "Toggle radar display", function(state)
-    showRadar = state
-    updateRadar()
-    if showRadar then
-        createRadarSliders()
-    else
-        removeRadarSliders()
-    end
-end)
-
 EspSection:NewSlider("Max Distance", "Set maximum distance for ESP", 500, 0, function(value)
     maxDistance = value
     updateAllESP()
 end)
-
--- Radar Settings
-local radarFrame
-local radarBlips = {}
-local radarXSlider
-local radarYSlider
-
-local function createRadar()
-    if not radarFrame then
-        radarFrame = Instance.new("Frame")
-        radarFrame.Size = UDim2.new(0, 200, 0, 200)
-        radarFrame.Position = UDim2.new(1, -220, 0, 20)
-        radarFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        radarFrame.BackgroundTransparency = 0.5
-        radarFrame.BorderSizePixel = 0
-        radarFrame.Parent = game.CoreGui
-    end
-end
-
-local function updateRadarBlips()
-    if not radarFrame then return end
-    
-    for _, blip in pairs(radarBlips) do
-        blip:Destroy()
-    end
-    radarBlips = {}
-
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local blip = Instance.new("Frame")
-            blip.Size = UDim2.new(0, 5, 0, 5)
-            blip.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            blip.BorderSizePixel = 0
-
-            local relativePosition = player.Character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position
-            local radarSize = radarFrame.AbsoluteSize
-            local blipX = relativePosition.X / maxDistance * radarSize.X.Scale
-            local blipY = relativePosition.Z / maxDistance * radarSize.Y.Scale
-
-            blip.Position = UDim2.new(0.5 + blipX, 0, 0.5 + blipY, 0)
-            blip.Parent = radarFrame
-            table.insert(radarBlips, blip)
-        end
-    end
-end
-
-local function updateRadar()
-    if showRadar then
-        if not radarFrame then
-            createRadar()
-        end
-        updateRadarBlips()
-        RunService.RenderStepped:Connect(updateRadarBlips) -- Ensure radar updates continuously
-    else
-        if radarFrame then
-            radarFrame:Destroy()
-            radarFrame = nil
-        end
-    end
-end
-
-local function createRadarSliders()
-    radarXSlider = EspSection:NewSlider("Radar X Position", "Set radar X position", 1, 0, function(value)
-        if radarFrame then
-            radarFrame.Position = UDim2.new(value, 0, radarFrame.Position.Y.Scale, radarFrame.Position.Y.Offset)
-        end
-    end)
-
-    radarYSlider = EspSection:NewSlider("Radar Y Position", "Set radar Y position", 1, 0, function(value)
-        if radarFrame then
-            radarFrame.Position = UDim2.new(radarFrame.Position.X.Scale, radarFrame.Position.X.Offset, value, 0)
-        end
-    end)
-end
-
-local function removeRadarSliders()
-    if radarXSlider then
-        radarXSlider:Remove()
-        radarXSlider = nil
-    end
-    if radarYSlider then
-        radarYSlider:Remove()
-        radarYSlider = nil
-    end
-end
 
 -- Teleport Settings
 local TeleportSection = TeleportTab:NewSection("Teleport")
@@ -339,12 +243,7 @@ local function initESP()
     Players.PlayerRemoving:Connect(removeESP)
 end
 
-RunService.Heartbeat:Connect(function()
-    updateAllESP()
-    if showRadar then
-        updateRadarBlips()
-    end
-end)
+RunService.Heartbeat:Connect(updateAllESP)
 initESP()
 initPlayerList()
 
