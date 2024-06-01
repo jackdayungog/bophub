@@ -265,10 +265,20 @@ end)
 -- Local Player Settings
 local LocalSection = LocalTab:NewSection("Local Player Settings")
 
+local function tweenHumanoidProperty(property, targetValue, duration)
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = localPlayer.Character.Humanoid
+        local initial = humanoid[property]
+        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+        local tween = TweenService:Create(humanoid, tweenInfo, {[property] = targetValue})
+        tween:Play()
+    end
+end
+
 LocalSection:NewSlider("Walk Speed", "Set your walk speed", 100, 16, function(value)
-    localPlayer.Character.Humanoid.WalkSpeed = value
+    tweenHumanoidProperty("WalkSpeed", value, 2)
 end)
 
 LocalSection:NewSlider("Jump Power", "Set your jump power", 100, 50, function(value)
-    localPlayer.Character.Humanoid.JumpPower = value
+    tweenHumanoidProperty("JumpPower", value, 2)
 end)
