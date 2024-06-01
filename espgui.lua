@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local localPlayerCharacter = game.Workspace:WaitForChild(localPlayer.Name)
+print(localPlayerCharacter)
 local maxDistance = 100 -- Default max distance for ESP
 local lerpSpeed = 1 -- Default lerp speed
 
