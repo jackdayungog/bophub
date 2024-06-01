@@ -1,9 +1,9 @@
-local Players = game:GetService("Players")
+local Players = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
-local localPlayer = Players.LocalPlayer
+local localPlayer = Workspace.LocalPlayer
 local maxDistance = 100 -- Default max distance for ESP
 local lerpSpeed = 1 -- Default lerp speed
 
