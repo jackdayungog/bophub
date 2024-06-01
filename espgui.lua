@@ -3,7 +3,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
-local localPlayer = game.Workspace:WaitForChild(localPlayer)
+local localPlayerCharacter = game.Workspace:WaitForChild(localPlayer.Name)
 local maxDistance = 100 -- Default max distance for ESP
 local lerpSpeed = 1 -- Default lerp speed
 
@@ -54,7 +54,7 @@ local function lerpToPlayer(player)
         if humanoidRootPart then
             local targetPosition = humanoidRootPart.Position
             
-            local startPosition = localPlayer.Character.HumanoidRootPart.Position
+            local startPosition = localPlayerCharacter.Character.HumanoidRootPart.Position
             local duration = (targetPosition - startPosition).Magnitude / 100 -- Duration based on distance
             
             local startTime = tick()
@@ -64,7 +64,7 @@ local function lerpToPlayer(player)
                 local newPositionCFrame = CFrame.new(newPosition)
                 
                 -- Update local player's position
-                local humanoidRootPart = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local humanoidRootPart = localPlayerCharacter.Character:FindFirstChild("HumanoidRootPart")
                 if humanoidRootPart then
                     humanoidRootPart.CFrame = newPositionCFrame
                 end
@@ -88,7 +88,7 @@ end
 
 local function updatePlayerList()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer then
+        if player ~= localPlayerCharacter then
             if not playerList[player.Name] then
                 createPlayerButton(player)
             end
@@ -113,7 +113,7 @@ end
 
 local function initPlayerList()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer then
+        if player ~= localPlayerCharacter then
             createPlayerButton(player)
         end
     end
@@ -157,7 +157,7 @@ local function createESP(player)
         distanceBillboard.AlwaysOnTop = true
 
         local distanceLabel = Instance.new("TextLabel")
-        distanceLabel.Text = math.floor((character.HumanoidRootPart.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude) .. "m"
+        distanceLabel.Text = math.floor((character.HumanoidRootPart.Position - localPlayerCharacter.Character.HumanoidRootPart.Position).Magnitude) .. "m"
         distanceLabel.Size = UDim2.new(1, 0, 1, 0)
         distanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         distanceLabel.BackgroundTransparency = 1
@@ -176,7 +176,7 @@ local function createESP(player)
 
         local tracerAttachment1 = Instance.new("Attachment")
         tracerAttachment1.Name = "TracerAttachment1"
-        tracerAttachment1.Parent = localPlayer.Character:WaitForChild("HumanoidRootPart")
+        tracerAttachment1.Parent = localPlayerCharacter.Character:WaitForChild("HumanoidRootPart")
 
         local tracer = Instance.new("Beam")
         tracer.Attachment0 = tracerAttachment0
@@ -211,7 +211,7 @@ local function updateESP(player)
     local character = player.Character
     if not character then return end
     removeESP(player)
-    local distance = (localPlayer.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+    local distance = (localPlayerCharacter.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
     if distance <= maxDistance then
         createESP(player)
     end
@@ -219,7 +219,7 @@ end
 
 local function updateAllESP()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player ~= localPlayerCharacter and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             updateESP(player)
         end
     end
@@ -234,7 +234,7 @@ end
 
 local function initESP()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer then
+        if player ~= localPlayerCharacter then
             updateESP(player)
         end
     end
@@ -266,9 +266,9 @@ end)
 local LocalSection = LocalTab:NewSection("Local Player Settings")
 
 LocalSection:NewSlider("Walk Speed", "Set your walk speed", 100, 16, function(value)
-    localPlayer.Character.Humanoid.WalkSpeed = value
+    localPlayerCharacter.Character.Humanoid.WalkSpeed = value
 end)
 
 LocalSection:NewSlider("Jump Power", "Set your jump power", 100, 50, function(value)
-    localPlayer.Character.Humanoid.JumpPower = value
+    localPlayerCharacter.Character.Humanoid.JumpPower = value
 end)
