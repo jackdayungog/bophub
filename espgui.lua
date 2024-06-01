@@ -4,6 +4,22 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = game.Workspace:WaitForChild(localPlayer.Name)
+
+-- If the character is found, you can access its properties
+if localPlayerCharacter then
+    print("Local player's character found in Workspace")
+    -- Access local player's character properties
+    local humanoid = localPlayerCharacter:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        -- Access the humanoid properties
+        print("Local player's humanoid found with WalkSpeed:", humanoid.WalkSpeed)
+    else
+        print("Local player's humanoid not found")
+    end
+else
+    print("Local player's character not found in Workspace")
+end
+
 local maxDistance = 100 -- Default max distance for ESP
 local lerpSpeed = 1 -- Default lerp speed
 
