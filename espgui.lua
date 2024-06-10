@@ -3,27 +3,18 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local localPlayer = Players.LocalPlayer
-
--- ESP variables
-local espEnabled = false
 local maxDistance = 250 -- Distance threshold for ESP
-
--- Aim variables
-local aimEnabled = false
-local aimKeybind = Enum.KeyCode.E -- Default aim keybind
-local aimShakeIntensity = 0.05 -- Adjust this value to control the shake intensity
-local fovRadius = 125 -- Radius of the FOV circle
-
--- NoClip variables
+local espEnabled = false
 local noClipEnabled = false
 
--- GUI Library
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Script GUI", "BloodTheme")
-local Tab = Window:NewTab("Main")
-local Section = Tab:NewSection("Scripts")
+local Window = Library.CreateLib("Script GUI", "GrapeTheme")
+local ESP = Window:NewTab("ESP")
+local ESPSection = ESP:NewSection("ESP")
+local NoClip = Window:NewTab("NoClip")
+local NoClipSection = NoClip:NewSection("NoClip")
 
--- ESP functions
+-- ESP Functions
 local function createESP(player)
     if player == localPlayer then return end
     
@@ -105,11 +96,11 @@ local function updateESP()
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= localPlayer then
                 removeESP(player)
-            end
+            }
         end
         return
     end
-    
+
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
@@ -136,61 +127,24 @@ end
 local function onPlayerAdded(player)
     player.CharacterAdded:Connect(function()
         wait(1) -- Ensure character is fully loaded
-        if espEnabled then
-            createESP(player)
-        end
+        createESP(player)
     end)
 end
 
-local function toggleESP(enabled)
-    espEnabled = enabled
-    if not enabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            removeESP(player)
-        end
-    end
-end
-
--- Aim functions
-local function updateFovCircle(fovCircle)
-    local screenCenter = workspace.CurrentCamera.ViewportSize / 2
-    fovCircle.Position = Vector2.new(screenCenter.X, screenCenter.Y)
-end
-
-local function getClosestPlayerInFov(fovCircle, fovRadius)
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-
-    for _, targetPlayer in pairs(Players:GetPlayers()) do
-        if targetPlayer ~= localPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local screenPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(targetPlayer.Character.HumanoidRootPart.Position)
-            if onScreen then
-                local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - fovCircle.Position).magnitude
-                if distanceFromCenter <= fovRadius and distanceFromCenter < shortestDistance then
-                    shortestDistance = distanceFromCenter
-                    closestPlayer = targetPlayer
-                end
-            end
+local function initESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            createESP(player)
         end
     end
 
-    return closestPlayer
+    Players.PlayerAdded:Connect(onPlayerAdded)
+    Players.PlayerRemoving:Connect(function(player)
+        removeESP(player)
+    end)
 end
 
-local function addShake(position, intensity)
-    local shake = Vector3.new(
-        math.random() * intensity - intensity / 2,
-        math.random() * intensity - intensity / 2,
-        math.random() * intensity - intensity / 2
-    )
-    return position + shake
-end
-
-local function toggleAim(enabled)
-    aimEnabled = enabled
-end
-
--- NoClip functions
+-- NoClip Functions
 local function setNoclip(enabled)
     noClipEnabled = enabled
 
@@ -213,99 +167,25 @@ end
 
 local function toggleNoClip(enabled)
     noClipEnabled = enabled
-    setNoclip(enabled)
+    setNoclip(noClipEnabled)
 end
 
--- GUI Elements
-Section:NewToggle("ESP", "Enable/Disable ESP", function(state)
-    espEnabled = state
-    toggleESP(espEnabled)
-    print("ESP: " .. (espEnabled and "ON" or "OFF"))
-end)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
 
-Section:NewToggle("Aim", "Enable/Disable Aim", function(state)
-    aimEnabled = state
-    toggleAim(aimEnabled)
-    print("Aim: " .. (aimEnabled and "ON" or "OFF"))
-end)
-
-Section:NewToggle("NoClip", "Enable/Disable NoClip", function(state)
-    noClipEnabled = state
-    toggleNoClip(noClipEnabled)
-    print("NoClip: " .. (noClipEnabled and "ON" or "OFF"))
-end)
-
-Section:NewKeybind("Set Aim Keybind", "Change Aim Keybind", aimKeybind, function(key)
-    aimKeybind = key
-    print("Aim Keybind set to: " .. key.Name)
-end)
-
--- GUI Initialization
-local function initGUI()
-    -- Ensure ESP is applied to all existing players if enabled
-    if espEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= localPlayer then
-                createESP(player)
-            end
-        end
-    end
-
-    -- Ensure NoClip is applied to the local player if enabled
-    if noClipEnabled then
-        setNoclip(true)
-    end
-end
-
--- Initialize
-initGUI()
-
--- RunService Events
-RunService.Heartbeat:Connect(updateESP)
-RunService.RenderStepped:Connect(function()
-    if aimEnabled then
-    local fovCircle = Drawing.new("Circle")
-        fovCircle.Radius = fovRadius
-        fovCircle.Thickness = 2
-        fovCircle.Color = Color3.new(1, 0, 0)
-        fovCircle.Filled = false
-        fovCircle.Visible = true
-
-        updateFovCircle(fovCircle)
-
-        local closestPlayer = getClosestPlayerInFov(fovCircle, fovRadius)
-        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local targetPosition = closestPlayer.Character.HumanoidRootPart.Position
-            targetPosition = addShake(targetPosition, aimShakeIntensity)
-
-            -- Calculate the direction and set the camera's CFrame directly
-            local direction = (targetPosition - localPlayer.Character.Head.Position).unit
-            local targetCFrame = CFrame.new(localPlayer.Character.Head.Position, localPlayer.Character.Head.Position + direction)
-
-            workspace.CurrentCamera.CFrame = targetCFrame
-        end
-    end
-end)
-
--- Input Events
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == aimKeybind then
-        aimEnabled = true
-    elseif input.KeyCode == Enum.KeyCode.N then
+    if input.KeyCode == Enum.KeyCode.N then
         toggleNoClip(not noClipEnabled)
     end
 end)
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == aimKeybind then
-        aimEnabled = false
+RunService.Stepped:Connect(function()
+    if noClipEnabled then
+        for _, part in pairs(localPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
     end
-end)
-
--- Player Events
-Players.PlayerAdded:Connect(onPlayerAdded)
-Players.PlayerRemoving:Connect(function(player)
-    removeESP(player)
 end)
 
 localPlayer.CharacterAdded:Connect(function(char)
@@ -314,5 +194,22 @@ localPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- Final Initialization
-initESP()
+-- GUI Elements
+ESPSection:NewToggle("Toggle ESP", "Toggles ESP on or off", function(state)
+    espEnabled = state
+    if espEnabled then
+        print("ESP Enabled")
+        initESP()
+    else
+        print("ESP Disabled")
+        updateESP()
+    end
+end)
+
+NoClipSection:NewToggle("Toggle NoClip", "Toggles NoClip on or off", function(state)
+    toggleNoClip(state)
+    print("NoClip " .. (noClipEnabled and "Enabled" or "Disabled"))
+end)
+
+-- Update ESP based on distance
+RunService.Heartbeat:Connect(updateESP)
