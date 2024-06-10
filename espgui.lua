@@ -8,12 +8,6 @@ local localPlayer = Players.LocalPlayer
 local espEnabled = false
 local maxDistance = 250 -- Distance threshold for ESP
 
--- Aim variables
-local aimEnabled = false
-local aimKeybind = Enum.KeyCode.E -- Default aim keybind
-local aimShakeIntensity = 0.05 -- Adjust this value to control the shake intensity
-local fovRadius = 125 -- Radius of the FOV circle
-
 -- NoClip variables
 local noClipEnabled = false
 
@@ -151,45 +145,6 @@ local function toggleESP(enabled)
     end
 end
 
--- Aim functions
-local function updateFovCircle(fovCircle)
-    local screenCenter = workspace.CurrentCamera.ViewportSize / 2
-    fovCircle.Position = Vector2.new(screenCenter.X, screenCenter.Y)
-end
-
-local function getClosestPlayerInFov(fovCircle, fovRadius)
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-
-    for _, targetPlayer in pairs(Players:GetPlayers()) do
-        if targetPlayer ~= localPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local screenPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(targetPlayer.Character.HumanoidRootPart.Position)
-            if onScreen then
-                local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - fovCircle.Position).magnitude
-                if distanceFromCenter <= fovRadius and distanceFromCenter < shortestDistance then
-                    shortestDistance = distanceFromCenter
-                    closestPlayer = targetPlayer
-                end
-            end
-        end
-    end
-
-    return closestPlayer
-end
-
-local function addShake(position, intensity)
-    local shake = Vector3.new(
-        math.random() * intensity - intensity / 2,
-        math.random() * intensity - intensity / 2,
-        math.random() * intensity - intensity / 2
-    )
-    return position + shake
-end
-
-local function toggleAim(enabled)
-    aimEnabled = enabled
-end
-
 -- NoClip functions
 local function setNoclip(enabled)
     noClipEnabled = enabled
@@ -223,21 +178,10 @@ Section:NewToggle("ESP", "Enable/Disable ESP", function(state)
     print("ESP: " .. (espEnabled and "ON" or "OFF"))
 end)
 
-Section:NewToggle("Aim", "Enable/Disable Aim", function(state)
-    aimEnabled = state
-    toggleAim(aimEnabled)
-    print("Aim: " .. (aimEnabled and "ON" or "OFF"))
-end)
-
 Section:NewToggle("NoClip", "Enable/Disable NoClip", function(state)
     noClipEnabled = state
     toggleNoClip(noClipEnabled)
     print("NoClip: " .. (noClipEnabled and "ON" or "OFF"))
-end)
-
-Section:NewKeybind("Set Aim Keybind", "Change Aim Keybind", aimKeybind, function(key)
-    aimKeybind = key
-    print("Aim Keybind set to: " .. key.Name)
 end)
 
 -- GUI Initialization
@@ -262,43 +206,11 @@ initGUI()
 
 -- RunService Events
 RunService.Heartbeat:Connect(updateESP)
-RunService.RenderStepped:Connect(function()
-    if aimEnabled then
-                local fovCircle = Drawing.new("Circle")
-        fovCircle.Radius = fovRadius
-        fovCircle.Thickness = 2
-        fovCircle.Color = Color3.new(1, 0, 0)
-        fovCircle.Filled = false
-        fovCircle.Visible = true
-
-        updateFovCircle(fovCircle)
-
-        local closestPlayer = getClosestPlayerInFov(fovCircle, fovRadius)
-        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local targetPosition = closestPlayer.Character.HumanoidRootPart.Position
-            targetPosition = addShake(targetPosition, aimShakeIntensity)
-
-            -- Calculate the direction and set the camera's CFrame directly
-            local direction = (targetPosition - localPlayer.Character.Head.Position).unit
-            local targetCFrame = CFrame.new(localPlayer.Character.Head.Position, localPlayer.Character.Head.Position + direction)
-
-            workspace.CurrentCamera.CFrame = targetCFrame
-        end
-    end
-end)
 
 -- Input Events
 UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == aimKeybind then
-        aimEnabled = true
-    elseif input.KeyCode == Enum.KeyCode.N then
+    if input.KeyCode == Enum.KeyCode.N then
         toggleNoClip(not noClipEnabled)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode == aimKeybind then
-        aimEnabled = false
     end
 end)
 
