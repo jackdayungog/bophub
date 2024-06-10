@@ -1,38 +1,17 @@
--- Load Kavo UI Library
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Script Hub", "DarkTheme")
+local Window = Library.CreateLib("Script Toggles", "DarkTheme")
+local Tab = Window:NewTab("Main")
+local Section = Tab:NewSection("Toggles")
 
--- Services
+-- Services and Variables
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
--- Local Player
 local localPlayer = Players.LocalPlayer
-
--- ESP Variables
 local espEnabled = false
-local maxDistance = 250 -- Distance threshold for ESP
-
--- Aim Variables
 local aimEnabled = false
-local aimShakeIntensity = 0.05 -- Adjust this value to control the shake intensity
-local fovRadius = 125 -- Radius of the FOV circle
-
--- NoClip Variables
 local noClipEnabled = false
-
--- Create FOV Circle for Aim
-local fovCircle = Drawing.new("Circle")
-fovCircle.Radius = fovRadius
-fovCircle.Thickness = 2
-fovCircle.Color = Color3.new(1, 0, 0)
-fovCircle.Filled = false
-fovCircle.Visible = false
-
--- Create GUI Tabs
-local Tab = Window:NewTab("Main")
-local Section = Tab:NewSection("Scripts")
 
 -- ESP Functions
 local function createESP(player)
@@ -41,7 +20,6 @@ local function createESP(player)
     local character = player.Character
     if not character then return end
 
-    -- Create name tag (BillboardGui)
     local billboard = Instance.new("BillboardGui")
     billboard.Adornee = character:WaitForChild("HumanoidRootPart")
     billboard.Size = UDim2.new(0, 200, 0, 50)
@@ -59,7 +37,6 @@ local function createESP(player)
     textLabel.Parent = billboard
     billboard.Parent = character
 
-    -- Create outline (Highlight)
     local highlight = Instance.new("Highlight")
     highlight.Adornee = character
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
@@ -69,7 +46,6 @@ local function createESP(player)
     highlight.Name = "ESPHighlight"
     highlight.Parent = character
 
-    -- Create tracer (Beam)
     local tracerAttachment0 = Instance.new("Attachment")
     tracerAttachment0.Name = "TracerAttachment0"
     tracerAttachment0.Parent = character:WaitForChild("HumanoidRootPart")
@@ -112,10 +88,19 @@ local function removeESP(player)
 end
 
 local function updateESP()
+    if not espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= localPlayer then
+                removeESP(player)
+            end
+        end
+        return
+    end
+
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-            if distance <= maxDistance then
+            if distance <= 250 then
                 if not player.Character:FindFirstChild("ESPHighlight") then
                     createESP(player)
                 end
@@ -127,53 +112,30 @@ local function updateESP()
                     end
                 end
             else
-                if player.Character:FindFirstChild("ESPHighlight") then
-                    removeESP(player)
-                end
+                removeESP(player)
             end
         end
     end
 end
 
-local function onPlayerAdded(player)
-    player.CharacterAdded:Connect(function()
-        wait(1) -- Ensure character is fully loaded
-        createESP(player)
-    end)
-end
-
-local function initESP()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer then
-            createESP(player)
-        end
-    end
-
-    Players.PlayerAdded:Connect(onPlayerAdded)
-    Players.PlayerRemoving:Connect(function(player)
-        removeESP(player)
-    end)
-end
-
-local function toggleESP(state)
-    espEnabled = state
-    if espEnabled then
-        initESP()
-        RunService.Heartbeat:Connect(updateESP)
-    else
+local function toggleESP(enabled)
+    espEnabled = enabled
+    if not espEnabled then
         for _, player in pairs(Players:GetPlayers()) do
-            removeESP(player)
+            if player ~= localPlayer then
+                removeESP(player)
+            end
         end
     end
 end
 
 -- Aim Functions
-local function updateFovCircle()
+local function updateFovCircle(fovCircle)
     local screenCenter = workspace.CurrentCamera.ViewportSize / 2
     fovCircle.Position = Vector2.new(screenCenter.X, screenCenter.Y)
 end
 
-local function getClosestPlayerInFov()
+local function getClosestPlayerInFov(fovCircle, fovRadius)
     local closestPlayer = nil
     local shortestDistance = math.huge
 
@@ -181,7 +143,7 @@ local function getClosestPlayerInFov()
         if targetPlayer ~= localPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local screenPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(targetPlayer.Character.HumanoidRootPart.Position)
             if onScreen then
-                local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - fovCircle.Position).magnitude
+                local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - fovCircle.Position).Magnitude
                 if distanceFromCenter <= fovRadius and distanceFromCenter < shortestDistance then
                     shortestDistance = distanceFromCenter
                     closestPlayer = targetPlayer
@@ -193,7 +155,7 @@ local function getClosestPlayerInFov()
     return closestPlayer
 end
 
-local function addShake(position)
+local function addShake(position, aimShakeIntensity)
     local shake = Vector3.new(
         math.random() * aimShakeIntensity - aimShakeIntensity / 2,
         math.random() * aimShakeIntensity - aimShakeIntensity / 2,
@@ -202,86 +164,163 @@ local function addShake(position)
     return position + shake
 end
 
-local function aimAtPlayer()
-    updateFovCircle()
+local function toggleAim(enabled)
+    aimEnabled = enabled
+    if not aimEnabled then
+        -- Clean up any aim-related objects or states if necessary
+    end
+end
+
+RunService.RenderStepped:Connect(function()
     if aimEnabled then
-        local closestPlayer = getClosestPlayerInFov()
+        local fovCircle = Drawing.new("Circle")
+        fovCircle.Radius = 125
+        fovCircle.Thickness = 2
+        fovCircle.Color = Color3.new(1, 0, 0)
+        fovCircle.Filled = false
+        fovCircle.Visible = true
+        updateFovCircle(fovCircle)
+
+        local closestPlayer = getClosestPlayerInFov(fovCircle, 125)
         if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local targetPosition = closestPlayer.Character.HumanoidRootPart.Position
-            targetPosition = addShake(targetPosition)
+            targetPosition = addShake(targetPosition, 0.05)
 
-            -- Calculate the direction and set the camera's CFrame directly
             local direction = (targetPosition - localPlayer.Character.Head.Position).unit
             local targetCFrame = CFrame.new(localPlayer.Character.Head.Position, localPlayer.Character.Head.Position + direction)
 
             workspace.CurrentCamera.CFrame = targetCFrame
         end
     end
-end
-
-local function toggleAim(state)
-    aimEnabled = state
-    fovCircle.Visible = aimEnabled
-    if aimEnabled then
-        RunService.RenderStepped:Connect(aimAtPlayer)
-    end
-end
+end)
 
 -- NoClip Functions
 local function setNoclip(enabled)
     noClipEnabled = enabled
-
-    if noClipEnabled then
-        -- Make all parts in the character non-collidable
-        for _, part in pairs(localPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") and part.CanCollide then
-                part.CanCollide = false
-            end
-        end
-    else
-        -- Make all parts in the character collidable again
-        for _, part in pairs(localPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") and not part.CanCollide then
-                part.CanCollide = true
-            end
-        end
-    end
-end
-
-local function toggleNoClip(state)
-    noClipEnabled = state
-    setNoclip(noClipEnabled)
-    if noClipEnabled then
-        RunService.Stepped:Connect(function()
-            if noClipEnabled then
-                -- Make all parts in the character non-collidable continuously
-                for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") and part.CanCollide then
-                        part.CanCollide = false
-                    end
+    local character = localPlayer.Character
+    if character then
+        if noClipEnabled then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
                 end
             end
-        end)
+        else
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
     end
 end
+
+local function toggleNoClip(enabled)
+    noClipEnabled = enabled
+    setNoclip(noClipEnabled)
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.N then
+        toggleNoClip(not noClipEnabled)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if noClipEnabled then
+        local character = localPlayer.Character
+        if character then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        wait(1)
+        if espEnabled then
+            createESP(player)
+        end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if espEnabled then
+        removeESP(player)
+    end
+end)
 
 -- GUI Buttons
 Section:NewButton("Toggle ESP", "Enable/Disable ESP", function()
     espEnabled = not espEnabled
     toggleESP(espEnabled)
+    print("ESP: " .. (espEnabled and "ON" or "OFF"))
 end)
 
-Section:NewButton("Toggle Aim", "Enable/Disable Aim Assist", function()
+Section:NewButton("Toggle ESP", "Enable/Disable ESP", function()
+    espEnabled = not espEnabled
+    toggleESP(espEnabled)
+    print("ESP: " .. (espEnabled and "ON" or "OFF"))
+end)
+
+Section:NewButton("Toggle Aim", "Enable/Disable Aim", function()
     aimEnabled = not aimEnabled
     toggleAim(aimEnabled)
+    print("Aim: " .. (aimEnabled and "ON" or "OFF"))
 end)
 
 Section:NewButton("Toggle NoClip", "Enable/Disable NoClip", function()
     noClipEnabled = not noClipEnabled
     toggleNoClip(noClipEnabled)
+    print("NoClip: " .. (noClipEnabled and "ON" or "OFF"))
 end)
 
--- Initial states for scripts
-toggleESP(espEnabled)
-toggleAim(aimEnabled)
-toggleNoClip(noClipEnabled)
+-- GUI Initialization
+local function initGUI()
+    -- Ensure ESP is applied to all existing players if enabled
+    if espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= localPlayer then
+                createESP(player)
+            end
+        end
+    end
+
+    -- Ensure NoClip is applied to the local player if enabled
+    if noClipEnabled then
+        setNoclip(true)
+    end
+end
+
+-- Initialize
+initGUI()
+
+-- RunService Events
+RunService.Heartbeat:Connect(updateESP)
+RunService.RenderStepped:Connect(function()
+    if aimEnabled then
+        local fovCircle = Drawing.new("Circle")
+        fovCircle.Radius = 125
+        fovCircle.Thickness = 2
+        fovCircle.Color = Color3.new(1, 0, 0)
+        fovCircle.Filled = false
+        fovCircle.Visible = true
+        updateFovCircle(fovCircle)
+
+        local closestPlayer = getClosestPlayerInFov(fovCircle, 125)
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition = closestPlayer.Character.HumanoidRootPart.Position
+            targetPosition = addShake(targetPosition, 0.05)
+
+            local direction = (targetPosition - localPlayer.Character.Head.Position).unit
+            local targetCFrame = CFrame.new(localPlayer.Character.Head.Position, localPlayer.Character.Head.Position + direction)
+
+            workspace.CurrentCamera.CFrame = targetCFrame
+        end
+    end
+end)
