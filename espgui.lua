@@ -1,226 +1,136 @@
-local Players = game:GetService("Workspace")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-
-local localPlayerCharacter = game.Workspace(localPlayer.Name)
-local maxDistance = 100 -- Default max distance for ESP
-local lerpSpeed = 1 -- Default lerp speed
-
+-- Load Kavo UI Library
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("ESP GUI", "DarkTheme")
-local EspTab = Window:NewTab("ESP")
-local TeleportTab = Window:NewTab("Teleport")
-local LocalTab = Window:NewTab("Local") -- Add a new tab for local player settings
+local Window = Library.CreateLib("Script Hub", "DarkTheme")
 
--- ESP Settings
-local EspSection = EspTab:NewSection("ESP Settings")
-local showName = false
-local showDistance = false
-local showTracers = false
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
-EspSection:NewToggle("Show Name", "Toggle showing player names", function(state)
-    showName = state
-    updateAllESP()
-end)
+-- Local Player
+local localPlayer = Players.LocalPlayer
 
-EspSection:NewToggle("Show Distance", "Toggle showing player distance", function(state)
-    showDistance = state
-    updateAllESP()
-end)
+-- ESP Variables
+local espEnabled = false
+local maxDistance = 250 -- Distance threshold for ESP
 
-EspSection:NewToggle("Show Tracers", "Toggle showing tracers", function(state)
-    showTracers = state
-    updateAllESP()
-end)
+-- Aim Variables
+local aimEnabled = false
+local aimShakeIntensity = 0.05 -- Adjust this value to control the shake intensity
+local fovRadius = 125 -- Radius of the FOV circle
 
-EspSection:NewSlider("Max Distance", "Set maximum distance for ESP", 500, 0, function(value)
-    maxDistance = value
-    updateAllESP()
-end)
+-- NoClip Variables
+local noClipEnabled = false
 
--- Teleport Settings
-local TeleportSection = TeleportTab:NewSection("Teleport")
-local playerList = {}
+-- Create FOV Circle for Aim
+local fovCircle = Drawing.new("Circle")
+fovCircle.Radius = fovRadius
+fovCircle.Thickness = 2
+fovCircle.Color = Color3.new(1, 0, 0)
+fovCircle.Filled = false
+fovCircle.Visible = false
 
-local lerpSpeedSlider = TeleportSection:NewSlider("Lerp Speed", "Set lerp speed", 5, 1, function(value)
-    lerpSpeed = value
-end)
+-- Create GUI Tabs
+local Tab = Window:NewTab("Main")
+local Section = Tab:NewSection("Scripts")
 
-local function lerpToPlayer(player)
-    local character = player.Character
-    if character then
-        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-        if humanoidRootPart then
-            local targetPosition = humanoidRootPart.Position
-            
-            local startPosition = localPlayerCharacter.Character.HumanoidRootPart.Position
-            local duration = (targetPosition - startPosition).Magnitude / 100 -- Duration based on distance
-            
-            local startTime = tick()
-            while tick() - startTime < duration do
-                local t = (tick() - startTime) / duration
-                local newPosition = startPosition:Lerp(targetPosition, t)
-                local newPositionCFrame = CFrame.new(newPosition)
-                
-                -- Update local player's position
-                local humanoidRootPart = localPlayerCharacter.Character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    humanoidRootPart.CFrame = newPositionCFrame
-                end
-                
-                -- Update camera's position to follow the local player
-                local camera = game.Workspace.CurrentCamera
-                camera.CFrame = CFrame.new(newPosition + Vector3.new(0, 5, -10), newPosition)
-                
-                RunService.RenderStepped:Wait()
-            end
-        end
-    end
-end
-
-local function createPlayerButton(player)
-    local button = TeleportSection:NewButton(player, "Teleport to " .. player, function()
-        lerpToPlayer(player)
-    end)
-    playerList[player] = button
-end
-
-local function updatePlayerList()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayerCharacter then
-            if not playerList[player] then
-                createPlayerButton(player)
-            end
-        end
-    end
-end
-
-local function removePlayerButton(player)
-    if playerList[player] then
-        playerList[player]:Destroy()
-        playerList[player] = nil
-    end
-end
-
-local function onPlayerAdded(player)
-    createPlayerButton(player)
-end
-
-local function onPlayerRemoving(player)
-    removePlayerButton(player)
-end
-
-local function initPlayerList()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayerCharacter then
-            createPlayerButton(player)
-        end
-    end
-
-    Players.PlayerAdded:Connect(onPlayerAdded)
-    Players.PlayerRemoving:Connect(onPlayerRemoving)
-end
-
+-- ESP Functions
 local function createESP(player)
+    if player == localPlayer then return end
+    
     local character = player.Character
     if not character then return end
-    
-    -- Create BillboardGui for name
-    if showName then
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "ESPBillboard"
-        billboard.Adornee = character:WaitForChild("HumanoidRootPart")
-        billboard.Size = UDim2.new(0, 100, 0, 25)
-        billboard.StudsOffset = Vector3.new(0, 3, 0)
-        billboard.AlwaysOnTop = true
 
-        local textLabel = Instance.new("TextLabel")
-        textLabel.Text = player
-        textLabel.Size = UDim2.new(1, 0, 1, 0)
-        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        textLabel.BackgroundTransparency = 1
-        textLabel.TextScaled = true
-        textLabel.Font = Enum.Font.SourceSans
-        textLabel.TextSize = 14
-        textLabel.Parent = billboard
-        billboard.Parent = character
-    end
+    -- Create name tag (BillboardGui)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Adornee = character:WaitForChild("HumanoidRootPart")
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Name = "ESPNameTag"
 
-    -- Create BillboardGui for distance
-    if showDistance then
-        local distanceBillboard = Instance.new("BillboardGui")
-        distanceBillboard.Name = "ESPDistanceBillboard"
-        distanceBillboard.Adornee = character:WaitForChild("HumanoidRootPart")
-        distanceBillboard.Size = UDim2.new(0, 100, 0, 25)
-        distanceBillboard.StudsOffset = Vector3.new(0, -3, 0)
-        distanceBillboard.AlwaysOnTop = true
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Text = player.Name
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextScaled = true
+    textLabel.Name = "ESPNameLabel"
+    textLabel.Parent = billboard
+    billboard.Parent = character
 
-        local distanceLabel = Instance.new("TextLabel")
-        distanceLabel.Text = math.floor((character.HumanoidRootPart.Position - localPlayerCharacter.Character.HumanoidRootPart.Position).Magnitude) .. "m"
-        distanceLabel.Size = UDim2.new(1, 0, 1, 0)
-        distanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        distanceLabel.BackgroundTransparency = 1
-        distanceLabel.TextScaled = true
-        distanceLabel.Font = Enum.Font.SourceSans
-        distanceLabel.TextSize = 14
-        distanceLabel.Parent = distanceBillboard
-        distanceBillboard.Parent = character
-    end
+    -- Create outline (Highlight)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = character
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillTransparency = 1
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0
+    highlight.Name = "ESPHighlight"
+    highlight.Parent = character
 
-    -- Create Tracers
-    if showTracers then
-        local tracerAttachment0 = Instance.new("Attachment")
-        tracerAttachment0.Name = "TracerAttachment0"
-        tracerAttachment0.Parent = character:WaitForChild("HumanoidRootPart")
+    -- Create tracer (Beam)
+    local tracerAttachment0 = Instance.new("Attachment")
+    tracerAttachment0.Name = "TracerAttachment0"
+    tracerAttachment0.Parent = character:WaitForChild("HumanoidRootPart")
 
-        local tracerAttachment1 = Instance.new("Attachment")
-        tracerAttachment1.Name = "TracerAttachment1"
-        tracerAttachment1.Parent = localPlayerCharacter.Character:WaitForChild("HumanoidRootPart")
+    local tracerAttachment1 = Instance.new("Attachment")
+    tracerAttachment1.Name = "TracerAttachment1"
+    tracerAttachment1.Parent = localPlayer.Character:WaitForChild("HumanoidRootPart")
 
-        local tracer = Instance.new("Beam")
-        tracer.Attachment0 = tracerAttachment0
-        tracer.Attachment1 = tracerAttachment1
-        tracer.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
-        tracer.FaceCamera = true
-        tracer.Width0 = 0.1
-        tracer.Width1 = 0.1
-        tracer.Name = "ESPTracer"
-        tracer.Parent = character
-    end
+    local tracer = Instance.new("Beam")
+    tracer.Attachment0 = tracerAttachment0
+    tracer.Attachment1 = tracerAttachment1
+    tracer.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+    tracer.FaceCamera = true
+    tracer.Width0 = 0.1
+    tracer.Width1 = 0.1
+    tracer.Name = "ESPTracer"
+    tracer.Parent = character
 end
 
 local function removeESP(player)
     local character = player.Character
     if character then
-        local billboard = character:FindFirstChild("ESPBillboard")
-        if billboard then billboard:Destroy() end
-
-        local distanceBillboard = character:FindFirstChild("ESPDistanceBillboard")
-        if distanceBillboard then distanceBillboard:Destroy() end
-
+        local highlight = character:FindFirstChild("ESPHighlight")
+        if highlight then
+            highlight:Destroy()
+        end
+        local billboard = character:FindFirstChild("ESPNameTag")
+        if billboard then
+            billboard:Destroy()
+        end
         local tracer = character:FindFirstChild("ESPTracer")
-        if tracer then tracer:Destroy() end
-
+        if tracer then
+            tracer:Destroy()
+        end
         local tracerAttachment0 = character:FindFirstChild("TracerAttachment0")
-        if tracerAttachment0 then tracerAttachment0:Destroy() end
+        if tracerAttachment0 then
+            tracerAttachment0:Destroy()
+        end
     end
 end
 
-local function updateESP(player)
-    local character = player.Character
-    if not character then return end
-    removeESP(player)
-    local distance = (localPlayerCharacter.Character.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
-    if distance <= maxDistance then
-        createESP(player)
-    end
-end
-
-local function updateAllESP()
+local function updateESP()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayerCharacter and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            updateESP(player)
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+            if distance <= maxDistance then
+                if not player.Character:FindFirstChild("ESPHighlight") then
+                    createESP(player)
+                end
+                local billboard = player.Character:FindFirstChild("ESPNameTag")
+                if billboard then
+                    local textLabel = billboard:FindFirstChild("ESPNameLabel")
+                    if textLabel then
+                        textLabel.Text = player.Name .. " (" .. math.floor(distance) .. "m)"
+                    end
+                end
+            else
+                if player.Character:FindFirstChild("ESPHighlight") then
+                    removeESP(player)
+                end
+            end
         end
     end
 end
@@ -228,47 +138,150 @@ end
 local function onPlayerAdded(player)
     player.CharacterAdded:Connect(function()
         wait(1) -- Ensure character is fully loaded
-        updateESP(player)
+        createESP(player)
     end)
 end
 
 local function initESP()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayerCharacter then
-            updateESP(player)
+        if player ~= localPlayer then
+            createESP(player)
         end
     end
 
     Players.PlayerAdded:Connect(onPlayerAdded)
-    Players.PlayerRemoving:Connect(removeESP)
+    Players.PlayerRemoving:Connect(function(player)
+        removeESP(player)
+    end)
 end
 
-RunService.Heartbeat:Connect(updateAllESP)
-initESP()
-initPlayerList()
-
--- Toggle GUI visibility with a key press
-local guiVisible = true
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.G then -- Change this to the key you want to use for toggling
-        guiVisible = not guiVisible
-        if guiVisible then
-            Library:ToggleUI() -- Ensure this calls the correct method to open the GUI
-        else
-            Library:ToggleUI() -- Ensure this calls the correct method to close the GUI
+local function toggleESP(state)
+    espEnabled = state
+    if espEnabled then
+        initESP()
+        RunService.Heartbeat:Connect(updateESP)
+    else
+        for _, player in pairs(Players:GetPlayers()) do
+            removeESP(player)
         end
     end
+end
+
+-- Aim Functions
+local function updateFovCircle()
+    local screenCenter = workspace.CurrentCamera.ViewportSize / 2
+    fovCircle.Position = Vector2.new(screenCenter.X, screenCenter.Y)
+end
+
+local function getClosestPlayerInFov()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+
+    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+        if targetPlayer ~= localPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local screenPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(targetPlayer.Character.HumanoidRootPart.Position)
+            if onScreen then
+                local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - fovCircle.Position).magnitude
+                if distanceFromCenter <= fovRadius and distanceFromCenter < shortestDistance then
+                    shortestDistance = distanceFromCenter
+                    closestPlayer = targetPlayer
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+local function addShake(position)
+    local shake = Vector3.new(
+        math.random() * aimShakeIntensity - aimShakeIntensity / 2,
+        math.random() * aimShakeIntensity - aimShakeIntensity / 2,
+        math.random() * aimShakeIntensity - aimShakeIntensity / 2
+    )
+    return position + shake
+end
+
+local function aimAtPlayer()
+    updateFovCircle()
+    if aimEnabled then
+        local closestPlayer = getClosestPlayerInFov()
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition = closestPlayer.Character.HumanoidRootPart.Position
+            targetPosition = addShake(targetPosition)
+
+            -- Calculate the direction and set the camera's CFrame directly
+            local direction = (targetPosition - localPlayer.Character.Head.Position).unit
+            local targetCFrame = CFrame.new(localPlayer.Character.Head.Position, localPlayer.Character.Head.Position + direction)
+
+            workspace.CurrentCamera.CFrame = targetCFrame
+        end
+    end
+end
+
+local function toggleAim(state)
+    aimEnabled = state
+    fovCircle.Visible = aimEnabled
+    if aimEnabled then
+        RunService.RenderStepped:Connect(aimAtPlayer)
+    end
+end
+
+-- NoClip Functions
+local function setNoclip(enabled)
+    noClipEnabled = enabled
+
+    if noClipEnabled then
+        -- Make all parts in the character non-collidable
+        for _, part in pairs(localPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    else
+        -- Make all parts in the character collidable again
+        for _, part in pairs(localPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") and not part.CanCollide then
+                part.CanCollide = true
+            end
+        end
+    end
+end
+
+local function toggleNoClip(state)
+    noClipEnabled = state
+    setNoclip(noClipEnabled)
+    if noClipEnabled then
+        RunService.Stepped:Connect(function()
+            if noClipEnabled then
+                -- Make all parts in the character non-collidable continuously
+                for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end
+
+-- GUI Buttons
+Section:NewButton("Toggle ESP", "Enable/Disable ESP", function()
+    espEnabled = not espEnabled
+    toggleESP(espEnabled)
 end)
 
--- Local Player Settings
-local LocalSection = LocalTab:NewSection("Local Player Settings")
-
-LocalSection:NewSlider("Walk Speed", "Set your walk speed", 100, 16, function(value)
-    localPlayerCharacter.Character.Humanoid.WalkSpeed = value
+Section:NewButton("Toggle Aim", "Enable/Disable Aim Assist", function()
+    aimEnabled = not aimEnabled
+    toggleAim(aimEnabled)
 end)
 
-LocalSection:NewSlider("Jump Power", "Set your jump power", 100, 50, function(value)
-    localPlayerCharacter.Character.Humanoid.JumpPower = value
+Section:NewButton("Toggle NoClip", "Enable/Disable NoClip", function()
+    noClipEnabled = not noClipEnabled
+    toggleNoClip(noClipEnabled)
 end)
+
+-- Initial states for scripts
+toggleESP(espEnabled)
+toggleAim(aimEnabled)
+toggleNoClip(noClipEnabled)
