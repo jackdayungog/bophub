@@ -7,7 +7,18 @@ local maxDistance = 250 -- Distance threshold for ESP
 local espEnabled = false
 local noClipEnabled = false
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+-- Load the GUI Library
+local Library
+pcall(function()
+    Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+end)
+
+if not Library then
+    warn("Failed to load the GUI library.")
+    return
+end
+
+-- Create GUI
 local Window = Library.CreateLib("Script GUI", "Sentinel")
 local ESP = Window:NewTab("ESP")
 local ESPSection = ESP:NewSection("ESP")
