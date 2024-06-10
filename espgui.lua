@@ -19,7 +19,7 @@ local noClipEnabled = false
 
 -- GUI Library
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Script GUI", "Ocean")
+local Window = Library.CreateLib("Script GUI", "Serpent")
 local Tab = Window:NewTab("Main")
 local Section = Tab:NewSection("Scripts")
 
